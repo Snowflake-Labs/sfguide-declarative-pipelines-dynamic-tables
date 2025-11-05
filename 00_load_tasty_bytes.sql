@@ -1,6 +1,9 @@
--- 00_load_tasty_bytes.sql
--- Sets up the lab environment by creating the necessary database, schemas,
--- warehouse, raw tables, and loading Tasty Bytes data from S3
+/*
+00_load_tasty_bytes.sql
+
+Sets up the lab environment by creating the necessary database, schemas,
+warehouse, raw tables, and loading Tasty Bytes data from S3.
+*/
 
 USE ROLE ACCOUNTADMIN;
 
@@ -40,6 +43,11 @@ type = 'csv';
 CREATE OR REPLACE STAGE tasty_bytes_db.raw.tasty_bytes_stage
   URL = 's3://sfquickstarts/tasty-bytes-builder-education/'
   FILE_FORMAT = tasty_bytes_db.public.csv_ff;
+
+-- Stage for Cortex Analyst semantic model files
+CREATE OR REPLACE STAGE tasty_bytes_db.analytics.semantic_models
+  DIRECTORY = (ENABLE = TRUE)
+  COMMENT = 'Stage for uploading Cortex Analyst semantic model YAML files';
 
 -- Table definitions for raw data
 CREATE OR REPLACE TABLE tasty_bytes_db.raw.order_header
