@@ -1,0 +1,693 @@
+name: TASTY_BYTES_ANALYTICS
+description: Comprehensive semantic model for Tasty Bytes business analytics covering daily metrics, product performance, order details, and enriched data across a 3-tier dynamic table pipeline
+
+tables:
+  - name: DAILY_BUSINESS_METRICS
+    description: Daily aggregated business metrics including revenue, orders, profit, customer counts, and discount analysis
+    base_table:
+      database: TASTY_BYTES_DB
+      schema: ANALYTICS
+      table: DAILY_BUSINESS_METRICS
+    dimensions:
+      - name: DAY_NAME
+        description: Name of the day of the week (e.g., Mon, Tue, Wed)
+        synonyms:
+          - day of week
+          - weekday
+          - day
+        expr: DAY_NAME
+        data_type: VARCHAR(3)
+    time_dimensions:
+      - name: ORDER_DATE
+        description: The date when orders were placed
+        synonyms:
+          - date
+          - order day
+          - business date
+        expr: ORDER_DATE
+        data_type: DATE
+    facts:
+      - name: ACTIVE_TRUCKS
+        description: Number of active food trucks operating on this date
+        synonyms:
+          - truck count
+          - number of trucks
+          - trucks
+        expr: ACTIVE_TRUCKS
+        data_type: NUMBER(18,0)
+      - name: AVG_ORDER_VALUE
+        description: Average value per order in dollars
+        synonyms:
+          - average order value
+          - AOV
+          - mean order value
+        expr: AVG_ORDER_VALUE
+        data_type: NUMBER(38,2)
+      - name: AVG_PROFIT_MARGIN_PCT
+        description: Average profit margin as a percentage
+        synonyms:
+          - profit margin
+          - margin percentage
+          - average margin
+        expr: AVG_PROFIT_MARGIN_PCT
+        data_type: NUMBER(38,2)
+      - name: ORDERS_WITH_DISCOUNT
+        description: Number of orders that included a discount
+        synonyms:
+          - discounted orders
+          - orders with discounts
+          - discount count
+        expr: ORDERS_WITH_DISCOUNT
+        data_type: NUMBER(13,0)
+      - name: TOTAL_ITEMS_SOLD
+        description: Total number of items or units sold
+        synonyms:
+          - items sold
+          - units sold
+          - quantity sold
+        expr: TOTAL_ITEMS_SOLD
+        data_type: NUMBER(17,0)
+      - name: TOTAL_LINE_DISCOUNT_AMOUNT
+        description: Total dollar amount of line-item level discounts
+        synonyms:
+          - line discounts
+          - item discounts
+          - line-level discount amount
+        expr: TOTAL_LINE_DISCOUNT_AMOUNT
+        data_type: NUMBER(22,2)
+      - name: TOTAL_LINE_ITEM_REVENUE
+        description: Total revenue from line items before order-level discounts
+        synonyms:
+          - line item revenue
+          - item revenue
+          - line-level revenue
+        expr: TOTAL_LINE_ITEM_REVENUE
+        data_type: NUMBER(38,4)
+      - name: TOTAL_ORDER_DISCOUNT_AMOUNT
+        description: Total dollar amount of order-level discounts
+        synonyms:
+          - order discounts
+          - order-level discount amount
+        expr: TOTAL_ORDER_DISCOUNT_AMOUNT
+        data_type: NUMBER(22,2)
+      - name: TOTAL_ORDERS
+        description: Total number of orders placed
+        synonyms:
+          - number of orders
+          - order count
+          - orders
+        expr: TOTAL_ORDERS
+        data_type: NUMBER(18,0)
+      - name: TOTAL_PROFIT
+        description: Total profit in dollars (revenue minus costs)
+        synonyms:
+          - profit
+          - net profit
+          - total profit amount
+        expr: TOTAL_PROFIT
+        data_type: NUMBER(38,4)
+      - name: TOTAL_REVENUE
+        description: Total revenue generated in dollars
+        synonyms:
+          - revenue
+          - sales
+          - total sales
+        expr: TOTAL_REVENUE
+        data_type: NUMBER(38,4)
+      - name: UNIQUE_CUSTOMERS
+        description: Number of unique customers who placed orders
+        synonyms:
+          - customer count
+          - number of customers
+          - customers
+        expr: UNIQUE_CUSTOMERS
+        data_type: NUMBER(18,0)
+
+  - name: PRODUCT_PERFORMANCE_METRICS
+    description: Product-level performance metrics including revenue, profit, units sold, and pricing by menu item
+    base_table:
+      database: TASTY_BYTES_DB
+      schema: ANALYTICS
+      table: PRODUCT_PERFORMANCE_METRICS
+    dimensions:
+      - name: ITEM_CATEGORY
+        description: Category of the menu item (e.g., Main, Dessert, Beverage)
+        synonyms:
+          - category
+          - product category
+          - item type
+        expr: ITEM_CATEGORY
+        data_type: VARCHAR(16777216)
+      - name: ITEM_SUBCATEGORY
+        description: Subcategory of the menu item for more detailed classification
+        synonyms:
+          - subcategory
+          - product subcategory
+        expr: ITEM_SUBCATEGORY
+        data_type: VARCHAR(16777216)
+      - name: MENU_ITEM_NAME
+        description: Name of the menu item or product
+        synonyms:
+          - product
+          - product name
+          - menu item
+          - item
+          - dish
+        expr: MENU_ITEM_NAME
+        data_type: VARCHAR(16777216)
+      - name: MENU_TYPE
+        description: Type of menu or food truck brand menu
+        synonyms:
+          - menu
+          - menu category
+        expr: MENU_TYPE
+        data_type: VARCHAR(16777216)
+      - name: TRUCK_BRAND_NAME
+        description: Brand name of the food truck
+        synonyms:
+          - truck brand
+          - brand
+          - truck name
+        expr: TRUCK_BRAND_NAME
+        data_type: VARCHAR(16777216)
+    facts:
+      - name: AVG_COGS
+        description: Average cost of goods sold per unit
+        synonyms:
+          - average cost
+          - mean COGS
+          - unit cost
+        expr: AVG_COGS
+        data_type: NUMBER(38,10)
+      - name: AVG_PROFIT_MARGIN_PCT
+        description: Average profit margin for this product as a percentage
+        synonyms:
+          - profit margin
+          - margin percentage
+          - product margin
+        expr: AVG_PROFIT_MARGIN_PCT
+        data_type: NUMBER(38,2)
+      - name: AVG_UNIT_PRICE
+        description: Average price per unit for this product in dollars
+        synonyms:
+          - price
+          - unit price
+          - average price
+        expr: AVG_UNIT_PRICE
+        data_type: NUMBER(38,2)
+      - name: MENU_ITEM_ID
+        description: Unique identifier for the menu item
+        expr: MENU_ITEM_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_COUNT
+        description: Number of orders that included this product
+        synonyms:
+          - orders
+          - order frequency
+          - times ordered
+        expr: ORDER_COUNT
+        data_type: NUMBER(18,0)
+      - name: PROFIT_PER_UNIT
+        description: Profit generated per unit sold
+        synonyms:
+          - unit profit
+          - profit per item
+        expr: PROFIT_PER_UNIT
+        data_type: NUMBER(38,10)
+      - name: REVENUE_PER_UNIT
+        description: Revenue generated per unit sold
+        synonyms:
+          - unit revenue
+          - revenue per item
+        expr: REVENUE_PER_UNIT
+        data_type: NUMBER(38,10)
+      - name: STANDARD_SALE_PRICE
+        description: Standard sale price for this product
+        synonyms:
+          - sale price
+          - list price
+          - standard price
+        expr: STANDARD_SALE_PRICE
+        data_type: NUMBER(38,10)
+      - name: TOTAL_PROFIT
+        description: Total profit generated by this product in dollars
+        synonyms:
+          - profit
+          - product profit
+          - total product profit
+        expr: TOTAL_PROFIT
+        data_type: NUMBER(38,4)
+      - name: TOTAL_REVENUE
+        description: Total revenue generated by this product in dollars
+        synonyms:
+          - revenue
+          - sales
+          - product revenue
+          - product sales
+        expr: TOTAL_REVENUE
+        data_type: NUMBER(38,4)
+      - name: TOTAL_UNITS_SOLD
+        description: Total number of units sold for this product
+        synonyms:
+          - units sold
+          - quantity sold
+          - items sold
+        expr: TOTAL_UNITS_SOLD
+        data_type: NUMBER(17,0)
+
+  - name: ORDER_FACT
+    description: Detailed order fact table joining order headers with line items and product information for comprehensive order analysis
+    base_table:
+      database: TASTY_BYTES_DB
+      schema: ANALYTICS
+      table: ORDER_FACT
+    dimensions:
+      - name: DAY_NAME
+        description: Name of the day of the week when order was placed
+        synonyms:
+          - day of week
+          - weekday
+        expr: DAY_NAME
+        data_type: VARCHAR(3)
+      - name: ITEM_CATEGORY
+        description: Category of the ordered menu item
+        synonyms:
+          - category
+          - product category
+        expr: ITEM_CATEGORY
+        data_type: VARCHAR(16777216)
+      - name: ITEM_SUBCATEGORY
+        description: Subcategory of the ordered menu item
+        synonyms:
+          - subcategory
+          - product subcategory
+        expr: ITEM_SUBCATEGORY
+        data_type: VARCHAR(16777216)
+      - name: LINE_HAS_DISCOUNT
+        description: Whether this line item had a discount applied
+        synonyms:
+          - line item discount
+          - item has discount
+        expr: LINE_HAS_DISCOUNT
+        data_type: BOOLEAN
+      - name: MENU_ITEM_NAME
+        description: Name of the ordered menu item
+        synonyms:
+          - product
+          - item
+          - dish
+        expr: MENU_ITEM_NAME
+        data_type: VARCHAR(16777216)
+      - name: MENU_TYPE
+        description: Type of menu
+        synonyms:
+          - menu
+        expr: MENU_TYPE
+        data_type: VARCHAR(16777216)
+      - name: ORDER_CHANNEL
+        description: Channel through which order was placed (e.g., mobile app, website)
+        synonyms:
+          - channel
+          - order source
+        expr: ORDER_CHANNEL
+        data_type: VARCHAR(16777216)
+      - name: ORDER_HAS_DISCOUNT
+        description: Whether the order had any discount applied
+        synonyms:
+          - order discount
+          - has discount
+        expr: ORDER_HAS_DISCOUNT
+        data_type: BOOLEAN
+      - name: TRUCK_BRAND_NAME
+        description: Brand name of the food truck that fulfilled the order
+        synonyms:
+          - truck brand
+          - brand
+        expr: TRUCK_BRAND_NAME
+        data_type: VARCHAR(16777216)
+    time_dimensions:
+      - name: ORDER_DATE
+        description: Date when order was placed
+        synonyms:
+          - date
+          - order day
+        expr: ORDER_DATE
+        data_type: DATE
+      - name: ORDER_TIMESTAMP
+        description: Timestamp when order was placed
+        synonyms:
+          - order time
+          - timestamp
+        expr: ORDER_TIMESTAMP
+        data_type: TIMESTAMP_NTZ(9)
+    facts:
+      - name: COST_OF_GOODS_USD
+        description: Cost of goods for this line item in USD
+        synonyms:
+          - COGS
+          - cost
+        expr: COST_OF_GOODS_USD
+        data_type: NUMBER(38,4)
+      - name: CUSTOMER_ID
+        description: Unique identifier for the customer
+        expr: CUSTOMER_ID
+        data_type: NUMBER(38,0)
+      - name: LINE_DISCOUNT_AMOUNT
+        description: Discount amount for this line item
+        synonyms:
+          - line discount
+          - item discount
+        expr: LINE_DISCOUNT_AMOUNT
+        data_type: NUMBER(10,2)
+      - name: LINE_NUMBER
+        description: Line number within the order
+        expr: LINE_NUMBER
+        data_type: NUMBER(38,0)
+      - name: LINE_PROFIT
+        description: Profit for this line item
+        synonyms:
+          - line item profit
+          - item profit
+        expr: LINE_PROFIT
+        data_type: NUMBER(38,4)
+      - name: LINE_TOTAL
+        description: Total amount for this line item
+        synonyms:
+          - line item total
+          - item total
+        expr: LINE_TOTAL
+        data_type: NUMBER(38,4)
+      - name: MENU_ITEM_ID
+        description: Unique identifier for the menu item
+        expr: MENU_ITEM_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_AMOUNT
+        description: Total order amount before discounts
+        synonyms:
+          - order subtotal
+        expr: ORDER_AMOUNT
+        data_type: NUMBER(38,4)
+      - name: ORDER_DETAIL_ID
+        description: Unique identifier for the order detail record
+        expr: ORDER_DETAIL_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_HOUR
+        description: Hour of day when order was placed (0-23)
+        synonyms:
+          - hour
+          - time of day
+        expr: ORDER_HOUR
+        data_type: NUMBER(2,0)
+      - name: ORDER_ID
+        description: Unique identifier for the order
+        expr: ORDER_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_LEVEL_DISCOUNT
+        description: Order-level discount amount
+        synonyms:
+          - order discount
+        expr: ORDER_LEVEL_DISCOUNT
+        data_type: NUMBER(10,2)
+      - name: ORDER_TOTAL
+        description: Total order amount after all discounts
+        synonyms:
+          - total
+          - order amount
+        expr: ORDER_TOTAL
+        data_type: NUMBER(38,4)
+      - name: PROFIT_MARGIN_PCT
+        description: Profit margin percentage for this line item
+        synonyms:
+          - margin
+          - profit margin
+        expr: PROFIT_MARGIN_PCT
+        data_type: NUMBER(38,2)
+      - name: QUANTITY
+        description: Quantity of items ordered
+        synonyms:
+          - qty
+          - units
+        expr: QUANTITY
+        data_type: NUMBER(5,0)
+      - name: SALE_PRICE_USD
+        description: Sale price per unit in USD
+        synonyms:
+          - price
+          - unit price
+        expr: SALE_PRICE_USD
+        data_type: NUMBER(38,4)
+      - name: TRUCK_ID
+        description: Unique identifier for the food truck
+        expr: TRUCK_ID
+        data_type: NUMBER(38,0)
+      - name: UNIT_PRICE
+        description: Price per unit for this line item
+        synonyms:
+          - price
+        expr: UNIT_PRICE
+        data_type: NUMBER(38,4)
+      - name: UNIT_PROFIT
+        description: Profit per unit for this line item
+        synonyms:
+          - profit per unit
+        expr: UNIT_PROFIT
+        data_type: NUMBER(38,4)
+
+  - name: ORDERS_ENRICHED
+    description: Enriched order header data with temporal dimensions and discount flags
+    base_table:
+      database: TASTY_BYTES_DB
+      schema: ANALYTICS
+      table: ORDERS_ENRICHED
+    dimensions:
+      - name: DAY_NAME
+        description: Name of the day of the week
+        synonyms:
+          - day of week
+          - weekday
+        expr: DAY_NAME
+        data_type: VARCHAR(3)
+      - name: HAS_DISCOUNT
+        description: Whether the order included any discount
+        synonyms:
+          - discounted
+          - has discount
+        expr: HAS_DISCOUNT
+        data_type: BOOLEAN
+      - name: ORDER_CHANNEL
+        description: Channel through which order was placed
+        synonyms:
+          - channel
+          - order source
+        expr: ORDER_CHANNEL
+        data_type: VARCHAR(16777216)
+    time_dimensions:
+      - name: ORDER_DATE
+        description: Date when order was placed
+        synonyms:
+          - date
+          - order day
+        expr: ORDER_DATE
+        data_type: DATE
+      - name: ORDER_TIMESTAMP
+        description: Timestamp when order was placed
+        synonyms:
+          - order time
+          - timestamp
+        expr: ORDER_TIMESTAMP
+        data_type: TIMESTAMP_NTZ(9)
+    facts:
+      - name: CUSTOMER_ID
+        description: Unique identifier for the customer
+        expr: CUSTOMER_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_AMOUNT
+        description: Order amount before discounts
+        synonyms:
+          - subtotal
+        expr: ORDER_AMOUNT
+        data_type: NUMBER(38,4)
+      - name: ORDER_DISCOUNT_AMOUNT
+        description: Total discount amount for the order
+        synonyms:
+          - discount
+          - order discount
+        expr: ORDER_DISCOUNT_AMOUNT
+        data_type: NUMBER(10,2)
+      - name: ORDER_HOUR
+        description: Hour of day when order was placed
+        synonyms:
+          - hour
+        expr: ORDER_HOUR
+        data_type: NUMBER(2,0)
+      - name: ORDER_ID
+        description: Unique identifier for the order
+        expr: ORDER_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_TOTAL
+        description: Total order amount after discounts
+        synonyms:
+          - total
+        expr: ORDER_TOTAL
+        data_type: NUMBER(38,4)
+      - name: TRUCK_ID
+        description: Unique identifier for the food truck
+        expr: TRUCK_ID
+        data_type: NUMBER(38,0)
+
+  - name: ORDER_ITEMS_ENRICHED
+    description: Enriched order line items with product details, pricing, and profit calculations
+    base_table:
+      database: TASTY_BYTES_DB
+      schema: ANALYTICS
+      table: ORDER_ITEMS_ENRICHED
+    dimensions:
+      - name: HAS_DISCOUNT
+        description: Whether the line item had a discount
+        synonyms:
+          - discounted
+          - has discount
+        expr: HAS_DISCOUNT
+        data_type: BOOLEAN
+      - name: ITEM_CATEGORY
+        description: Category of the menu item
+        synonyms:
+          - category
+        expr: ITEM_CATEGORY
+        data_type: VARCHAR(16777216)
+      - name: ITEM_SUBCATEGORY
+        description: Subcategory of the menu item
+        synonyms:
+          - subcategory
+        expr: ITEM_SUBCATEGORY
+        data_type: VARCHAR(16777216)
+      - name: MENU_ITEM_NAME
+        description: Name of the menu item
+        synonyms:
+          - product
+          - item
+        expr: MENU_ITEM_NAME
+        data_type: VARCHAR(16777216)
+      - name: MENU_TYPE
+        description: Type of menu
+        expr: MENU_TYPE
+        data_type: VARCHAR(16777216)
+      - name: TRUCK_BRAND_NAME
+        description: Brand name of the food truck
+        synonyms:
+          - truck brand
+          - brand
+        expr: TRUCK_BRAND_NAME
+        data_type: VARCHAR(16777216)
+    facts:
+      - name: COST_OF_GOODS_USD
+        description: Cost of goods in USD
+        synonyms:
+          - COGS
+          - cost
+        expr: COST_OF_GOODS_USD
+        data_type: NUMBER(38,4)
+      - name: LINE_DISCOUNT_AMOUNT
+        description: Discount amount for this line item
+        synonyms:
+          - discount
+        expr: LINE_DISCOUNT_AMOUNT
+        data_type: NUMBER(10,2)
+      - name: LINE_NUMBER
+        description: Line number within the order
+        expr: LINE_NUMBER
+        data_type: NUMBER(38,0)
+      - name: LINE_PROFIT
+        description: Profit for this line item
+        synonyms:
+          - profit
+        expr: LINE_PROFIT
+        data_type: NUMBER(38,4)
+      - name: LINE_TOTAL
+        description: Total amount for this line item
+        synonyms:
+          - total
+        expr: LINE_TOTAL
+        data_type: NUMBER(38,4)
+      - name: MENU_ITEM_ID
+        description: Unique identifier for the menu item
+        expr: MENU_ITEM_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_DETAIL_ID
+        description: Unique identifier for the order detail
+        expr: ORDER_DETAIL_ID
+        data_type: NUMBER(38,0)
+      - name: ORDER_ID
+        description: Unique identifier for the order
+        expr: ORDER_ID
+        data_type: NUMBER(38,0)
+      - name: PROFIT_MARGIN_PCT
+        description: Profit margin percentage
+        synonyms:
+          - margin
+        expr: PROFIT_MARGIN_PCT
+        data_type: NUMBER(38,2)
+      - name: QUANTITY
+        description: Quantity of items
+        synonyms:
+          - qty
+          - units
+        expr: QUANTITY
+        data_type: NUMBER(5,0)
+      - name: SALE_PRICE_USD
+        description: Sale price per unit in USD
+        synonyms:
+          - price
+        expr: SALE_PRICE_USD
+        data_type: NUMBER(38,4)
+      - name: UNIT_PRICE
+        description: Price per unit
+        synonyms:
+          - price
+        expr: UNIT_PRICE
+        data_type: NUMBER(38,4)
+      - name: UNIT_PROFIT
+        description: Profit per unit
+        expr: UNIT_PROFIT
+        data_type: NUMBER(38,4)
+
+verified_queries:
+  - name: daily_revenue_last_30_days
+    question: What was the daily revenue for the last 30 days?
+    sql: SELECT ORDER_DATE, TOTAL_REVENUE FROM TASTY_BYTES_DB.ANALYTICS.DAILY_BUSINESS_METRICS ORDER BY ORDER_DATE DESC LIMIT 30
+
+  - name: top_products_by_revenue
+    question: What are the top 10 products by revenue?
+    sql: SELECT MENU_ITEM_NAME, TOTAL_REVENUE, TOTAL_PROFIT FROM TASTY_BYTES_DB.ANALYTICS.PRODUCT_PERFORMANCE_METRICS ORDER BY TOTAL_REVENUE DESC LIMIT 10
+
+  - name: daily_profit_margins
+    question: Show me the profit margins by day for the last week
+    sql: SELECT ORDER_DATE, AVG_PROFIT_MARGIN_PCT, TOTAL_PROFIT FROM TASTY_BYTES_DB.ANALYTICS.DAILY_BUSINESS_METRICS ORDER BY ORDER_DATE DESC LIMIT 7
+
+  - name: products_by_category
+    question: Which product categories generate the most revenue?
+    sql: SELECT ITEM_CATEGORY, SUM(TOTAL_REVENUE) as CATEGORY_REVENUE, SUM(TOTAL_UNITS_SOLD) as UNITS_SOLD FROM TASTY_BYTES_DB.ANALYTICS.PRODUCT_PERFORMANCE_METRICS GROUP BY ITEM_CATEGORY ORDER BY CATEGORY_REVENUE DESC
+
+  - name: customer_trends
+    question: How many unique customers do we have per day?
+    sql: SELECT ORDER_DATE, UNIQUE_CUSTOMERS, TOTAL_ORDERS FROM TASTY_BYTES_DB.ANALYTICS.DAILY_BUSINESS_METRICS ORDER BY ORDER_DATE DESC LIMIT 30
+
+  - name: discount_analysis
+    question: What percentage of orders have discounts and how does that affect revenue?
+    sql: SELECT ORDER_DATE, TOTAL_ORDERS, ORDERS_WITH_DISCOUNT, TOTAL_ORDER_DISCOUNT_AMOUNT, TOTAL_LINE_DISCOUNT_AMOUNT FROM TASTY_BYTES_DB.ANALYTICS.DAILY_BUSINESS_METRICS ORDER BY ORDER_DATE DESC LIMIT 30
+
+  - name: best_performing_products_by_margin
+    question: Which products have the highest profit margins?
+    sql: SELECT MENU_ITEM_NAME, AVG_PROFIT_MARGIN_PCT, TOTAL_PROFIT, TOTAL_REVENUE FROM TASTY_BYTES_DB.ANALYTICS.PRODUCT_PERFORMANCE_METRICS ORDER BY AVG_PROFIT_MARGIN_PCT DESC LIMIT 10
+
+  - name: truck_performance
+    question: How many active trucks are operating each day?
+    sql: SELECT ORDER_DATE, ACTIVE_TRUCKS, TOTAL_REVENUE, TOTAL_ORDERS FROM TASTY_BYTES_DB.ANALYTICS.DAILY_BUSINESS_METRICS ORDER BY ORDER_DATE DESC LIMIT 30
+
+  - name: orders_by_channel
+    question: Show me order counts and revenue by order channel
+    sql: SELECT ORDER_CHANNEL, COUNT(ORDER_ID) as ORDER_COUNT, SUM(ORDER_TOTAL) as TOTAL_REVENUE FROM TASTY_BYTES_DB.ANALYTICS.ORDERS_ENRICHED GROUP BY ORDER_CHANNEL ORDER BY TOTAL_REVENUE DESC
+
+  - name: hourly_order_patterns
+    question: What hours of the day have the most orders?
+    sql: SELECT ORDER_HOUR, COUNT(ORDER_ID) as ORDER_COUNT, AVG(ORDER_TOTAL) as AVG_ORDER_VALUE FROM TASTY_BYTES_DB.ANALYTICS.ORDERS_ENRICHED GROUP BY ORDER_HOUR ORDER BY ORDER_HOUR
