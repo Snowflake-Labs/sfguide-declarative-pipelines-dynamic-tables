@@ -13,7 +13,7 @@ GRANT CREATE DATABASE ON ACCOUNT TO ROLE lab_role;
 USE ROLE lab_role;
 USE WAREHOUSE tasty_bytes_wh;
 
--- Create Intelligence infrastructure
+-- Create Intelligence objects
 CREATE DATABASE IF NOT EXISTS snowflake_intelligence;
 CREATE SCHEMA IF NOT EXISTS snowflake_intelligence.agents;
 
