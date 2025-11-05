@@ -7,7 +7,7 @@ dynamic table pipeline with sample data generation.
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
-USE WAREHOUSE tasty_bytes_wh;
+USE WAREHOUSE compute_wh;
 
 -- Grab current state --> 248,201,269 records
 SELECT COUNT(*) AS total_orders, MAX(order_ts) AS latest_order
@@ -60,7 +60,7 @@ FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
 ))
 ORDER BY REFRESH_START_TIME DESC LIMIT 10;
 
--- Check refresh history for daily_business_metrics
+-- Check refresh history for product_performance_metrics
 SELECT name, refresh_action, state, refresh_start_time
 FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
   NAME => 'tasty_bytes_db.ANALYTICS.PRODUCT_PERFORMANCE_METRICS'

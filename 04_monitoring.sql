@@ -6,7 +6,7 @@ Quick reference queries for monitoring dynamic table operations
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
-USE WAREHOUSE tasty_bytes_wh;
+USE WAREHOUSE compute_wh;
 
 -- Check all dynamic tables in the analytics schema
 SHOW DYNAMIC TABLES IN SCHEMA tasty_bytes_db.analytics;

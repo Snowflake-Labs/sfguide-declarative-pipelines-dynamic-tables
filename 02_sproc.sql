@@ -7,7 +7,7 @@ to demonstrate incremental refresh in dynamic tables.
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
-USE WAREHOUSE tasty_bytes_wh;
+USE WAREHOUSE compute_wh;
 
 -- Stored procedure to generate N synthetic orders with corresponding order details
 -- Example usage: CALL tasty_bytes_db.raw.generate_demo_orders(500);

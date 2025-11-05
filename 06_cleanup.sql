@@ -12,9 +12,6 @@ USE ROLE lab_role;
 -- Drop the entire database (cascades to all schemas, tables, dynamic tables, views, stages, etc.)
 DROP DATABASE IF EXISTS tasty_bytes_db;
 
--- Drop the warehouse
-DROP WAREHOUSE IF EXISTS tasty_bytes_wh;
-
 -- Optionally drop the role (requires ACCOUNTADMIN)
 -- USE ROLE ACCOUNTADMIN;
 -- DROP ROLE IF EXISTS lab_role;
