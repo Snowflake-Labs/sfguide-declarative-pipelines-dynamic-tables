@@ -11,7 +11,7 @@ USE ROLE ACCOUNTADMIN;
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE lab_role;
 
 USE ROLE lab_role;
-USE WAREHOUSE compute_wh;
+USE WAREHOUSE tasty_bytes_wh;
 
 -- Create Intelligence infrastructure
 CREATE DATABASE IF NOT EXISTS snowflake_intelligence;

@@ -7,7 +7,7 @@ dynamic table pipeline with sample data generation.
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
-USE WAREHOUSE compute_wh;
+USE WAREHOUSE tasty_bytes_wh;
 
 -- Grab current state --> 248,201,269 records
 SELECT COUNT(*) AS total_orders, MAX(order_ts) AS latest_order

@@ -7,7 +7,7 @@ with incremental refresh support across all tiers.
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
-USE WAREHOUSE compute_wh;
+USE WAREHOUSE tasty_bytes_wh;
 
 /*
 Tier 1: Raw data enrichment - create ORDERS_ENRICHED and ORDER_ITEMS_ENRICHED tables
@@ -16,7 +16,7 @@ Tier 1: Raw data enrichment - create ORDERS_ENRICHED and ORDER_ITEMS_ENRICHED ta
 -- ORDERS_ENRICHED: Orders enriched with temporal and financial metrics
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.orders_enriched
   TARGET_LAG = '12 hours'
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
   -- Order identifiers
@@ -46,7 +46,7 @@ WHERE order_id IS NOT NULL
 -- ORDER_ITEMS_ENRICHED: Enriched order items with product details and profit calculations
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_items_enriched
   TARGET_LAG = '12 hours'
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
   -- Order detail identifiers
@@ -94,7 +94,7 @@ Tier 2: Create ORDER_FACT table joining header and line items
 -- ORDER_FACT: Integrated order and line item data
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_fact
   TARGET_LAG = 'DOWNSTREAM' -- Checks upstream tables (tier 1) for changes then refreshes
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
   -- Order header fields
@@ -140,7 +140,7 @@ Tier 3: Aggregated metrics - Create DAILY_BUSINESS_METRICS and PRODUCT_PERFORMAN
 -- DAILY_BUSINESS_METRICS: Daily business metrics aggregated from ORDER_FACT
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics
   TARGET_LAG = 'DOWNSTREAM'
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
   order_date,
@@ -167,7 +167,7 @@ GROUP BY order_date, day_name;
 -- PRODUCT_PERFORMANCE_METRICS: Product performance metrics aggregated by item and category
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.product_performance_metrics
   TARGET_LAG = 'DOWNSTREAM'
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
   -- Product dimensions

@@ -27,7 +27,9 @@ USE ROLE lab_role;
 CREATE DATABASE IF NOT EXISTS tasty_bytes_db;
 CREATE SCHEMA IF NOT EXISTS tasty_bytes_db.raw;
 CREATE SCHEMA IF NOT EXISTS tasty_bytes_db.analytics;
+
 USE DATABASE tasty_bytes_db;
+
 CREATE OR REPLACE WAREHOUSE tasty_bytes_wh
    WAREHOUSE_SIZE = 'xlarge'
    WAREHOUSE_TYPE = 'standard'
@@ -115,13 +117,10 @@ SELECT * FROM tasty_bytes_db.raw.order_header LIMIT 10;
 SELECT * FROM tasty_bytes_db.raw.order_detail LIMIT 10;
 SELECT * FROM tasty_bytes_db.raw.menu LIMIT 10;
 
--- Drop the XL warehouse now that data loading is complete
-DROP WAREHOUSE IF EXISTS tasty_bytes_wh;
-
 -- Example task to load data from S3 every 12 hours
 /*
 CREATE OR REPLACE TASK tasty_bytes_db.raw.load_tasty_bytes_task
-  WAREHOUSE = compute_wh
+  WAREHOUSE = tasty_bytes_wh
   SCHEDULE = '720 MINUTE'
   COMMENT = 'Loads order data from S3 every 12 hours'
 AS
