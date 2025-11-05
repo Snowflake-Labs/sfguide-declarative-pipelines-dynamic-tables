@@ -1,4 +1,4 @@
-# sfguide-declarative-pipelines-dynamic-tables# Declarative Pipelines with Snowflake Dynamic Tables
+# Declarative Pipelines with Snowflake Dynamic Tables
 
 This lab demonstrates building a declarative data pipeline using Snowflake Dynamic Tables with incremental refresh capabilities, monitoring, and querying via Snowflake Intelligence.
 
