@@ -8,6 +8,10 @@ This lab demonstrates building a declarative data pipeline using Snowflake Dynam
 - Ability to create databases, warehouses, and roles
 - Basic SQL knowledge
 
+## How to run this repo
+
+The easiest way to build the data pipeline in this repo is to connect this repo to Snowflake via a Snowflake Workspace. Follow the instructions here: https://docs.snowflake.com/en/user-guide/ui-snowsight/workspaces-git#create-a-git-workspace
+
 ## Files
 
 **00_load_tasty_bytes.sql**
