@@ -15,7 +15,7 @@ Tier 1: Raw data enrichment - create ORDERS_ENRICHED and ORDER_ITEMS_ENRICHED ta
 
 -- ORDERS_ENRICHED: Orders enriched with temporal and financial metrics
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.orders_enriched
-  TARGET_LAG = '12 hours'
+  TARGET_LAG = 'DOWNSTREAM'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -45,7 +45,7 @@ WHERE order_id IS NOT NULL
 
 -- ORDER_ITEMS_ENRICHED: Enriched order items with product details and profit calculations
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_items_enriched
-  TARGET_LAG = '12 hours'
+  TARGET_LAG = 'DOWNSTREAM'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -139,7 +139,7 @@ Tier 3: Aggregated metrics - Create DAILY_BUSINESS_METRICS and PRODUCT_PERFORMAN
 
 -- DAILY_BUSINESS_METRICS: Daily business metrics aggregated from ORDER_FACT
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics
-  TARGET_LAG = 'DOWNSTREAM'
+  TARGET_LAG = '1 hour'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -166,7 +166,7 @@ GROUP BY order_date, day_name;
 
 -- PRODUCT_PERFORMANCE_METRICS: Product performance metrics aggregated by item and category
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.product_performance_metrics
-  TARGET_LAG = 'DOWNSTREAM'
+  TARGET_LAG = '1 hour'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
