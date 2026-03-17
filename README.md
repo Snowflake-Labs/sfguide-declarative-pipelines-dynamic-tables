@@ -52,6 +52,9 @@ The easiest way to build the data pipeline in this repo is to connect this repo 
 - Optional role cleanup (requires ACCOUNTADMIN)
 - Resets environment to clean state
 
+**agent_questions.md**
+- Sample questions to ask your Snowflake Intelligence agent
+
 ### Python Scripts
 
 **streamlit.py**
