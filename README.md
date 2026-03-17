@@ -28,7 +28,7 @@ The easiest way to build the data pipeline in this repo is to connect this repo 
 - Tier 1: Enriches raw data with temporal dimensions, financial calculations, and discount flags
 - Tier 2: Joins enriched orders and line items into comprehensive fact table
 - Tier 3: Pre-aggregates daily business metrics and product performance metrics
-- Uses TARGET_LAG for time-based refresh (12 hours) and DOWNSTREAM for dependency-based refresh
+- Uses DOWNSTREAM lag on Tier 1 and Tier 2, with a 1-hour TARGET_LAG on Tier 3 to drive the refresh schedule
 - Demonstrates automatic dependency graph management
 
 **02_sproc.sql**
@@ -47,12 +47,8 @@ The easiest way to build the data pipeline in this repo is to connect this repo 
 - Queries dynamic table metadata and refresh history
 - Shows refresh type (INCREMENTAL vs FULL), duration, and current state
 
-**05_intelligence.sql**
-- Sets up Snowflake Intelligence infrastructure (database, schema, grants)
-- Includes 10 sample business questions for testing agent capabilities
-
-**06_cleanup.sql**
-- Drops all lab resources: tasty_bytes_db, snowflake_intelligence database, and tasty_bytes_wh warehouse
+**05_cleanup.sql**
+- Drops all lab resources: tasty_bytes_db database and tasty_bytes_wh warehouse
 - Optional role cleanup (requires ACCOUNTADMIN)
 - Resets environment to clean state
 
@@ -63,10 +59,3 @@ The easiest way to build the data pipeline in this repo is to connect this repo 
 - Displays top 10 products by revenue with Altair bar chart colored by profit margin
 - Shows current day key metrics: orders, revenue, profit, margin, customers, items sold
 - Uses Snowpark for data access from dynamic tables
-
-### Configuration Files
-
-**semantic_model.yaml**
-- Semantic model defining all 5 dynamic tables with comprehensive metadata
-- Includes dimensions, time_dimensions, facts with synonyms and descriptions
-- Contains 10 verified queries for common business questions
