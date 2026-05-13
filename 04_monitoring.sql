@@ -1,18 +1,28 @@
 /*
-04_monitoring.sql
+================================================================================
+CORTEX CODE PROMPT
+================================================================================
+Copy the prompt below into Cortex Code (Cmd+L in your Workspace).
+CoCo will execute directly and show you the results.
+================================================================================
 
-Quick reference queries for monitoring dynamic table operations
+Show me a monitoring dashboard for all dynamic tables in 
+tasty_bytes_db.analytics: list each table with its scheduling state, target 
+lag, and for the most recent refresh show the refresh type (incremental vs 
+full), state, and duration in seconds.
+
+================================================================================
+EXPECTED OUTPUT
+The SQL below is what Cortex Code should generate.
+================================================================================
 */
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
 USE WAREHOUSE tasty_bytes_wh;
 
--- Check all dynamic tables in the analytics schema
 SHOW DYNAMIC TABLES IN SCHEMA tasty_bytes_db.analytics;
 
--- Summary of latest refresh operations across all dynamic tables
--- Shows refresh type (INCREMENTAL vs FULL) and duration
 SELECT
   name,
   refresh_action,

@@ -1,64 +1,79 @@
-# Declarative Pipelines with Snowflake Dynamic Tables
+# Build Autonomous SQL Pipelines with Cortex Code & Dynamic Tables
 
-This lab demonstrates building a declarative data pipeline using Snowflake Dynamic Tables with incremental refresh capabilities, monitoring, and querying via Snowflake Intelligence.
+This lab demonstrates building a declarative data pipeline using Snowflake Dynamic Tables — driven entirely by natural language prompts to **Cortex Code** inside Snowsight Workspaces.
+
+Instead of manually writing SQL, you describe your pipeline intent to Cortex Code and it generates, validates, and executes the SQL for you.
 
 ## Prerequisites
 
-- Snowflake account with ACCOUNTADMIN access
-- Ability to create databases, warehouses, and roles
-- Basic SQL knowledge
+- Snowflake account with ACCOUNTADMIN access ([free trial](https://signup.snowflake.com/developers))
+- Cortex Code enabled ([setup guide](https://docs.snowflake.com/en/user-guide/cortex-code))
+- Basic familiarity with data engineering concepts
 
-## How to run this repo
+## How It Works
 
-The easiest way to build the data pipeline in this repo is to connect this repo to Snowflake via a Snowflake Workspace. Follow the instructions here: https://docs.snowflake.com/en/user-guide/ui-snowsight/workspaces-git#create-a-git-workspace
+Each SQL file in this repo follows a **prompt-first pattern**:
 
-**Important:** When prompted to select an authentication method, select **Public repository**.
+```sql
+/*
+================================================================================
+CORTEX CODE PROMPT
+================================================================================
+<natural language prompt to give to Cortex Code>
+================================================================================
+EXPECTED OUTPUT
+<description of what CoCo should produce>
+================================================================================
+*/
+
+-- The expected SQL follows below...
+```
+
+**Workflow:**
+1. Create a Snowsight Workspace from this repository
+2. Open the Cortex Code panel (Cmd+L)
+3. Open a SQL file — copy the prompt at the top into CoCo
+4. Review CoCo's generated SQL against the expected output below
+5. Execute when satisfied
+
+The SQL files remain fully runnable on their own for anyone who prefers the traditional approach.
 
 ## Files
 
-**00_load_tasty_bytes.sql**
-- Creates lab role, database (tasty_bytes_db), schemas (raw, analytics), and warehouse (tasty_bytes_wh)
-- Defines raw table structures for order_header, order_detail, and menu
-- Sets up external stage and file format for CSV data ingestion
-- Loads approximately 1B+ records from public S3 bucket
+| File | Purpose | CoCo Approach |
+|:-----|:--------|:--------------|
+| `00_setup_environment.sql` | Role, DB, warehouse, tables, data load | Direct execution |
+| `01_dynamic_tables.sql` | 3-tier pipeline (5 dynamic tables) | Generate-then-confirm |
+| `02_sproc.sql` | Stored procedure for synthetic test data | Generate-then-confirm |
+| `03_incremental_refresh.sql` | Test incremental refresh capabilities | Sequential prompts |
+| `04_monitoring.sql` | Pipeline monitoring queries | Direct execution |
+| `05_semantic_view_agent.sql` | Semantic view + Cortex Agent creation | Generate-then-confirm |
+| `06_cleanup.sql` | Drop all lab resources | Direct execution |
 
+## Quick Start
 
-**01_dynamic_tables.sql**
-- Creates 3-tier declarative pipeline using Dynamic Tables
-- Tier 1: Enriches raw data with temporal dimensions, financial calculations, and discount flags
-- Tier 2: Joins enriched orders and line items into comprehensive fact table
-- Tier 3: Pre-aggregates daily business metrics and product performance metrics
-- Uses DOWNSTREAM lag on Tier 1 and Tier 2, with a 1-hour TARGET_LAG on Tier 3 to drive the refresh schedule
-- Demonstrates automatic dependency graph management
+1. Navigate to **Projects > Workspaces** in Snowsight
+2. Click **Create > From Git repository**
+3. Enter: `https://github.com/Snowflake-Labs/sfguide-declarative-pipelines-dynamic-tables`
+4. Select **Public repository**
+5. Open Cortex Code (Cmd+L) and start with `00_setup_environment.sql`
 
-**02_sproc.sql**
-- Creates stored procedure generate_demo_orders(num_rows) to simulate new order arrivals
-- Generates synthetic order headers and corresponding order details with referential integrity
-- Used to demonstrate incremental refresh capabilities
+## What You'll Build
 
-**03_incremental_refresh.sql**
-- Demonstrates incremental vs full refresh behavior
-- Inserts 500 new orders using stored procedure
-- Manually triggers refresh on all dynamic tables across three tiers
-- Queries INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY to show INCREMENTAL vs FULL refresh actions
-- Validates new data propagation through entire pipeline
+- A three-tier declarative data pipeline processing ~1B order records
+- Stored procedures for generating test data
+- Incremental refresh validation
+- Monitoring queries for pipeline observability
+- A semantic view for natural language querying
+- A Cortex Agent for conversational data exploration
 
-**04_monitoring.sql**
-- Queries dynamic table metadata and refresh history
-- Shows refresh type (INCREMENTAL vs FULL), duration, and current state
+## Related Resources
 
-**05_cleanup.sql**
-- Drops all lab resources: tasty_bytes_db database and tasty_bytes_wh warehouse
-- Optional role cleanup (requires ACCOUNTADMIN)
-- Resets environment to clean state
+- [Quickstart Guide](https://www.snowflake.com/en/developers/guides/snowflake-dynamic-tables-data-pipeline/)
+- [Dynamic Tables Documentation](https://docs.snowflake.com/en/user-guide/dynamic-tables-intro)
+- [Cortex Code Documentation](https://docs.snowflake.com/en/user-guide/cortex-code)
+- [Cortex Analyst Documentation](https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-analyst)
 
-**agent_questions.md**
-- Sample questions to ask your Snowflake Intelligence agent
+## License
 
-### Python Scripts
-
-**streamlit.py**
-- Streamlit dashboard visualizing Tasty Bytes analytics
-- Displays top 10 products by revenue with Altair bar chart colored by profit margin
-- Shows current day key metrics: orders, revenue, profit, margin, customers, items sold
-- Uses Snowpark for data access from dynamic tables
+Apache 2.0
