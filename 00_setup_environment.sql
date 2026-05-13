@@ -1,29 +1,43 @@
 /*
-00_load_tasty_bytes.sql
+================================================================================
+CORTEX CODE PROMPT
+================================================================================
+Copy the prompt below into Cortex Code (Cmd+L in your Workspace).
+Review the generated SQL, then execute.
+================================================================================
 
-Sets up the lab environment by creating the necessary database, schemas,
-warehouse, raw tables, and loading Tasty Bytes data from S3.
+Using ACCOUNTADMIN, set up a lab environment:
+- Create a role called lab_role and grant it to SYSADMIN
+- Grant lab_role CREATE WAREHOUSE and CREATE DATABASE on account
+- Switch to lab_role for all remaining operations
+- Create database tasty_bytes_db with schemas raw and analytics
+- Create a 2XL standard warehouse tasty_bytes_wh with 60s auto-suspend, 
+  auto-resume, initially suspended
+- Create a CSV file format in tasty_bytes_db.public
+- Create an external stage tasty_bytes_db.raw.tasty_bytes_stage pointing to 
+  s3://sfquickstarts/tasty-bytes-builder-education/
+- Create tables order_header, order_detail, and menu in tasty_bytes_db.raw 
+  (use appropriate column types for order IDs, timestamps, amounts, etc.)
+- Load all 3 tables using COPY INTO from the stage subdirectories:
+  raw_pos/order_header/, raw_pos/order_detail/, raw_pos/menu/
+
+================================================================================
+EXPECTED OUTPUT
+The SQL below is what Cortex Code should generate. Your output may differ
+slightly — verify the key elements match (role setup, table structures, stage URL).
+================================================================================
 */
 
 USE ROLE ACCOUNTADMIN;
 
--- Create lab role
 CREATE ROLE IF NOT EXISTS lab_role;
 GRANT ROLE lab_role TO ROLE SYSADMIN;
 
--- Grant warehouse privileges
 GRANT CREATE WAREHOUSE ON ACCOUNT TO ROLE lab_role;
-
--- Grant database and schema privileges
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE lab_role;
 
--- Grant task execution privileges (required for scheduled tasks)
--- GRANT EXECUTE TASK ON ACCOUNT TO ROLE lab_role;
-
--- Switch to lab_role for all subsequent operations
 USE ROLE lab_role;
 
--- Create database and schemas
 CREATE DATABASE IF NOT EXISTS tasty_bytes_db;
 CREATE SCHEMA IF NOT EXISTS tasty_bytes_db.raw;
 CREATE SCHEMA IF NOT EXISTS tasty_bytes_db.analytics;
@@ -31,22 +45,19 @@ CREATE SCHEMA IF NOT EXISTS tasty_bytes_db.analytics;
 USE DATABASE tasty_bytes_db;
 
 CREATE OR REPLACE WAREHOUSE tasty_bytes_wh
-   WAREHOUSE_SIZE = 'xlarge'
+   WAREHOUSE_SIZE = '2x-large'
    WAREHOUSE_TYPE = 'standard'
    AUTO_SUSPEND = 60
    AUTO_RESUME = TRUE
    INITIALLY_SUSPENDED = TRUE;
 
--- File format for CSV files
 CREATE OR REPLACE FILE FORMAT tasty_bytes_db.public.csv_ff
 type = 'csv';
 
--- External stage pointing to public S3 bucket
 CREATE OR REPLACE STAGE tasty_bytes_db.raw.tasty_bytes_stage
   URL = 's3://sfquickstarts/tasty-bytes-builder-education/'
   FILE_FORMAT = tasty_bytes_db.public.csv_ff;
 
--- Table definitions for raw data
 CREATE OR REPLACE TABLE tasty_bytes_db.raw.order_header
 (
    order_id NUMBER(38,0),
@@ -97,7 +108,6 @@ CREATE OR REPLACE TABLE tasty_bytes_db.raw.menu
 
 USE WAREHOUSE tasty_bytes_wh;
 
--- Load data into tables from CSV files in S3
 COPY INTO tasty_bytes_db.raw.order_header
 FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/order_header/;
 
@@ -107,26 +117,7 @@ FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/order_detail/;
 COPY INTO tasty_bytes_db.raw.menu
 FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/menu/;
 
--- Optional: Verify data loaded
-SELECT * FROM tasty_bytes_db.raw.order_header LIMIT 10;
-SELECT * FROM tasty_bytes_db.raw.order_detail LIMIT 10;
-SELECT * FROM tasty_bytes_db.raw.menu LIMIT 10;
-
--- Example task to load data from S3 every 12 hours
-/*
-CREATE OR REPLACE TASK tasty_bytes_db.raw.load_tasty_bytes_task
-  WAREHOUSE = tasty_bytes_wh
-  SCHEDULE = '720 MINUTE'
-  COMMENT = 'Loads order data from S3 every 12 hours'
-AS
-BEGIN
-  COPY INTO tasty_bytes_db.raw.order_header
-  FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/order_header/;
-
-  COPY INTO tasty_bytes_db.raw.order_detail
-  FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/order_detail/;
-
-  COPY INTO tasty_bytes_db.raw.menu
-  FROM @tasty_bytes_db.raw.tasty_bytes_stage/raw_pos/menu/;
-END;
-*/
+SELECT 'Data loaded successfully' AS status,
+       (SELECT COUNT(*) FROM tasty_bytes_db.raw.order_header) AS order_header_rows,
+       (SELECT COUNT(*) FROM tasty_bytes_db.raw.order_detail) AS order_detail_rows,
+       (SELECT COUNT(*) FROM tasty_bytes_db.raw.menu) AS menu_rows;

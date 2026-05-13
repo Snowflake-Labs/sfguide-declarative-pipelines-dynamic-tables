@@ -1,39 +1,80 @@
 /*
-01_dynamic_tables.sql
+================================================================================
+CORTEX CODE PROMPT
+================================================================================
+Copy the prompt below into Cortex Code (Cmd+L in your Workspace).
+Review the generated SQL, then execute.
+================================================================================
 
-Creates a 3-tier declarative pipeline using Snowflake Dynamic Tables
-with incremental refresh support across all tiers.
+Build a 3-tier dynamic table pipeline in tasty_bytes_db.analytics using 
+warehouse tasty_bytes_wh:
+
+Tier 1 - Enrichment (TARGET_LAG = DOWNSTREAM):
+- orders_enriched: From raw.order_header. Include order_id, truck_id, 
+  customer_id, order_channel. Add temporal dimensions: order_ts as 
+  order_timestamp, DATE(order_ts) as order_date, DAYNAME as day_name, 
+  HOUR as order_hour. Include order_amount and order_total. Cast 
+  order_discount_amount to NUMBER(10,2) using TRY_TO_NUMBER. Add a 
+  has_discount boolean (true when discount_id is not null and not empty). 
+  Filter out null order_id and null order_ts.
+
+- order_items_enriched: Join raw.order_detail with raw.menu on menu_item_id.
+  Include order_detail_id, order_id, line_number, menu_item_id, 
+  menu_item_name, item_category, item_subcategory, truck_brand_name, 
+  menu_type, quantity, unit_price, price as line_total, cost_of_goods_usd, 
+  sale_price_usd. Calculate unit_profit (unit_price - cost_of_goods_usd), 
+  line_profit (unit_profit * quantity), profit_margin_pct (percentage with 
+  2 decimal places, handle zero unit_price). Cast order_item_discount_amount 
+  to NUMBER(10,2) as line_discount_amount. Add has_discount flag. Filter 
+  out null order_id and null menu_item_id.
+
+Tier 2 - Fact Table (TARGET_LAG = DOWNSTREAM):
+- order_fact: Inner join orders_enriched (alias o) with order_items_enriched 
+  (alias oi) on order_id. Include all fields from both tables. Rename 
+  o.order_discount_amount as order_level_discount, o.has_discount as 
+  order_has_discount, oi.has_discount as line_has_discount.
+
+Tier 3 - Aggregated Metrics (TARGET_LAG = 1 hour):
+- daily_business_metrics: Aggregate order_fact by order_date, day_name. 
+  Include count distinct order_id, truck_id, customer_id. Sum quantity, 
+  order_total, line_total, line_profit. Avg order_total, profit_margin_pct. 
+  Count orders with discount. Sum discount amounts.
+
+- product_performance_metrics: Aggregate order_fact by menu_item_id, 
+  menu_item_name, item_category, item_subcategory, truck_brand_name, 
+  menu_type. Include count distinct order_id, sum quantity, sum line_total, 
+  sum line_profit, avg unit_price, avg profit_margin_pct, avg 
+  cost_of_goods_usd, avg sale_price_usd, revenue_per_unit, profit_per_unit.
+
+================================================================================
+EXPECTED OUTPUT
+The SQL below is what Cortex Code should generate. Your output may differ
+slightly — verify the key elements match (TARGET_LAG values, join conditions,
+column calculations, dependency flow).
+================================================================================
 */
 
 USE ROLE lab_role;
 USE DATABASE tasty_bytes_db;
 USE WAREHOUSE tasty_bytes_wh;
 
-/*
-Tier 1: Raw data enrichment - create ORDERS_ENRICHED and ORDER_ITEMS_ENRICHED tables
-*/
-
--- ORDERS_ENRICHED: Orders enriched with temporal and financial metrics
+-- Tier 1: ORDERS_ENRICHED
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.orders_enriched
   TARGET_LAG = 'DOWNSTREAM'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
-  -- Order identifiers
   order_id,
   truck_id,
   customer_id,
   order_channel,
-  -- Temporal dimensions
   order_ts AS order_timestamp,
   DATE(order_ts) AS order_date,
   DAYNAME(order_ts) AS day_name,
   HOUR(order_ts) AS order_hour,
-  -- Financial metrics
   order_amount,
   order_total,
   TRY_TO_NUMBER(order_discount_amount, 10, 2) AS order_discount_amount,
-  -- Simple discount flag
   CASE
     WHEN discount_id IS NOT NULL AND discount_id != '' THEN TRUE
     ELSE FALSE
@@ -43,30 +84,26 @@ WHERE order_id IS NOT NULL
   AND order_ts IS NOT NULL;
 
 
--- ORDER_ITEMS_ENRICHED: Enriched order items with product details and profit calculations
+-- Tier 1: ORDER_ITEMS_ENRICHED
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_items_enriched
   TARGET_LAG = 'DOWNSTREAM'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
-  -- Order detail identifiers
   od.order_detail_id,
   od.order_id,
   od.line_number,
-  -- Product information
   od.menu_item_id,
   m.menu_item_name,
   m.item_category,
   m.item_subcategory,
   m.truck_brand_name,
   m.menu_type,
-  -- Quantity and pricing
   od.quantity,
   od.unit_price,
   od.price AS line_total,
   m.cost_of_goods_usd,
   m.sale_price_usd,
-  -- Profit calculations
   (od.unit_price - m.cost_of_goods_usd) AS unit_profit,
   (od.unit_price - m.cost_of_goods_usd) * od.quantity AS line_profit,
   CASE
@@ -74,7 +111,6 @@ SELECT
       ROUND(((od.unit_price - m.cost_of_goods_usd) / od.unit_price) * 100, 2)
     ELSE 0
   END AS profit_margin_pct,
-  -- Discount information
   TRY_TO_NUMBER(od.order_item_discount_amount, 10, 2) AS line_discount_amount,
   CASE
     WHEN od.discount_id IS NOT NULL AND od.discount_id != '' THEN TRUE
@@ -87,17 +123,12 @@ WHERE od.order_id IS NOT NULL
   AND od.menu_item_id IS NOT NULL;
 
 
-/*
-Tier 2: Create ORDER_FACT table joining header and line items
-*/
-
--- ORDER_FACT: Integrated order and line item data
+-- Tier 2: ORDER_FACT
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_fact
-  TARGET_LAG = 'DOWNSTREAM' -- Checks upstream tables (tier 1) for changes then refreshes
+  TARGET_LAG = 'DOWNSTREAM'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
-  -- Order header fields
   o.order_id,
   o.truck_id,
   o.customer_id,
@@ -110,7 +141,6 @@ SELECT
   o.order_total,
   o.order_discount_amount AS order_level_discount,
   o.has_discount AS order_has_discount,
-  -- Order line item fields
   oi.order_detail_id,
   oi.line_number,
   oi.menu_item_id,
@@ -133,11 +163,8 @@ FROM tasty_bytes_db.analytics.orders_enriched o
 INNER JOIN tasty_bytes_db.analytics.order_items_enriched oi
   ON o.order_id = oi.order_id;
 
-/*
-Tier 3: Aggregated metrics - Create DAILY_BUSINESS_METRICS and PRODUCT_PERFORMANCE_METRICS tables
-*/
 
--- DAILY_BUSINESS_METRICS: Daily business metrics aggregated from ORDER_FACT
+-- Tier 3: DAILY_BUSINESS_METRICS
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics
   TARGET_LAG = '1 hour'
   WAREHOUSE = tasty_bytes_wh
@@ -145,50 +172,42 @@ CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics
 SELECT
   order_date,
   day_name,
-  -- Volume metrics
   COUNT(DISTINCT order_id) AS total_orders,
   COUNT(DISTINCT truck_id) AS active_trucks,
   COUNT(DISTINCT customer_id) AS unique_customers,
   SUM(quantity) AS total_items_sold,
-  -- Revenue metrics
   SUM(order_total) AS total_revenue,
   ROUND(AVG(order_total), 2) AS avg_order_value,
   SUM(line_total) AS total_line_item_revenue,
-  -- Profit metrics
   SUM(line_profit) AS total_profit,
   ROUND(AVG(profit_margin_pct), 2) AS avg_profit_margin_pct,
-  -- Discount metrics
   SUM(CASE WHEN order_has_discount THEN 1 ELSE 0 END) AS orders_with_discount,
   SUM(order_level_discount) AS total_order_discount_amount,
   SUM(line_discount_amount) AS total_line_discount_amount
 FROM tasty_bytes_db.analytics.order_fact
 GROUP BY order_date, day_name;
 
--- PRODUCT_PERFORMANCE_METRICS: Product performance metrics aggregated by item and category
+
+-- Tier 3: PRODUCT_PERFORMANCE_METRICS
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.product_performance_metrics
   TARGET_LAG = '1 hour'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
-  -- Product dimensions
   menu_item_id,
   menu_item_name,
   item_category,
   item_subcategory,
   truck_brand_name,
   menu_type,
-  -- Sales volume metrics
   COUNT(DISTINCT order_id) AS order_count,
   SUM(quantity) AS total_units_sold,
-  -- Revenue and profit metrics
   SUM(line_total) AS total_revenue,
   SUM(line_profit) AS total_profit,
   ROUND(AVG(unit_price), 2) AS avg_unit_price,
   ROUND(AVG(profit_margin_pct), 2) AS avg_profit_margin_pct,
-  -- Cost metrics
   AVG(cost_of_goods_usd) AS avg_cogs,
   AVG(sale_price_usd) AS standard_sale_price,
-  -- Performance indicators
   SUM(line_total) / NULLIF(SUM(quantity), 0) AS revenue_per_unit,
   SUM(line_profit) / NULLIF(SUM(quantity), 0) AS profit_per_unit
 FROM tasty_bytes_db.analytics.order_fact
@@ -199,41 +218,3 @@ GROUP BY
   item_subcategory,
   truck_brand_name,
   menu_type;
-
-/*
-Sample queries to validate data in dynamic tables
- */
-
--- Tier 1: Check orders_enriched - enriched order headers
-SELECT order_id, order_date, day_name, order_hour, order_amount, order_total, has_discount
-FROM tasty_bytes_db.analytics.orders_enriched
-ORDER BY order_timestamp DESC
-LIMIT 10;
-
--- Tier 1: Check order_items_enriched - enriched line items with product details
-SELECT menu_item_name, item_category, quantity, unit_price,
-       line_total, line_profit, profit_margin_pct
-FROM tasty_bytes_db.analytics.order_items_enriched
-ORDER BY line_profit DESC
-LIMIT 10;
-
--- Tier 2: Check order_fact - combined order header and line items
-SELECT order_id, order_date, menu_item_name, item_category,
-       quantity, order_total, line_profit, profit_margin_pct
-FROM tasty_bytes_db.analytics.order_fact
-ORDER BY order_timestamp DESC
-LIMIT 10;
-
--- Tier 3: Check daily_business_metrics - shows pre-aggregated daily KPIs
-SELECT order_date, day_name, total_orders, unique_customers,
-       total_revenue, avg_order_value, total_profit, avg_profit_margin_pct
-FROM tasty_bytes_db.analytics.daily_business_metrics
-ORDER BY order_date DESC
-LIMIT 10;
-
--- Tier 3: Check product_performance_metrics - shows product-level sales and profit analysis
-SELECT menu_item_name, item_category, order_count, total_units_sold,
-       total_revenue, total_profit, avg_profit_margin_pct
-FROM tasty_bytes_db.analytics.product_performance_metrics
-ORDER BY total_revenue DESC
-LIMIT 10;
