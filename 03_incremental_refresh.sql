@@ -1,79 +1,40 @@
 /*
-03_demo.sql
+================================================================================
+CORTEX CODE PROMPTS (Sequential)
+================================================================================
+Give Cortex Code the following prompts one at a time.
+================================================================================
 
-Queries to demonstrate incremental refresh capabilities of the
-dynamic table pipeline with sample data generation.
+PROMPT 1:
+How many rows are currently in tasty_bytes_db.raw.order_header and
+tasty_bytes_db.raw.order_detail?
+
+PROMPT 2:
+Call tasty_bytes_db.raw.generate_demo_orders(500)
+
+PROMPT 3:
+Refresh daily_business_metrics and product_performance_metrics in
+tasty_bytes_db.analytics.
+
+Note: Only trigger the top-tier tables — Snowflake automatically cascades
+through Tier 2 and Tier 1 first due to the DOWNSTREAM dependency model.
+
+PROMPT 4:
+Query tasty_bytes_db.information_schema.dynamic_table_refresh_history() for each
+of the 5 dynamic tables in tasty_bytes_db.analytics. Show the most recent
+refresh_action, state, refresh_trigger, and duration in seconds for each.
+
+Discussion: Notice that product_performance_metrics shows a FULL refresh.
+Why? This table aggregates across all products — when a new order arrives for
+an existing product, the aggregate row must be updated. Does a full rewrite
+make sense here?
+
+PROMPT 5:
+Query tasty_bytes_db.analytics.daily_business_metrics ordered by order_date
+descending, limit 5. Then query tasty_bytes_db.analytics.product_performance_metrics
+ordered by total_revenue descending, limit 10.
+
+================================================================================
+Reference SQL is available in the solutions branch.
+================================================================================
 */
-
-USE ROLE lab_role;
-USE DATABASE tasty_bytes_db;
-USE WAREHOUSE tasty_bytes_wh;
-
--- Grab current state --> 248,201,269 records
-SELECT COUNT(*) AS total_orders, MAX(order_ts) AS latest_order
-FROM tasty_bytes_db.raw.order_header;
-
--- 673,655,465 records
-SELECT COUNT(*) AS total_order_details FROM tasty_bytes_db.raw.order_detail;
-
--- Generate new demo orders (stored procedure generates both header and detail records)
-CALL tasty_bytes_db.raw.generate_demo_orders(500);
-
--- Verify new data in raw tables
-SELECT COUNT(*) AS total_orders FROM tasty_bytes_db.raw.order_header; -- +500 records
-SELECT COUNT(*) AS total_order_details FROM tasty_bytes_db.raw.order_detail; --+1,397 records
-
--- Manually trigger incremental refresh across all dynamic tables
--- Tier 1 tables will refresh first
-ALTER DYNAMIC TABLE tasty_bytes_db.analytics.orders_enriched REFRESH;
-ALTER DYNAMIC TABLE tasty_bytes_db.analytics.order_items_enriched REFRESH;
-
--- Check refresh history for orders_enriched and order_items_enriched
-SELECT name, refresh_action, state, refresh_start_time, refresh_trigger
-FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-  NAME => 'tasty_bytes_db.ANALYTICS.ORDERS_ENRICHED'
-))
-ORDER BY REFRESH_START_TIME DESC LIMIT 10;
-
-SELECT name, refresh_action, state, refresh_start_time, refresh_trigger
-FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-  NAME => 'tasty_bytes_db.ANALYTICS.ORDER_ITEMS_ENRICHED'
-))
-ORDER BY REFRESH_START_TIME DESC LIMIT 10;
-
--- Tier 2 and 3 will refresh due to DOWNSTREAM lag. Manually trigger:
-ALTER DYNAMIC TABLE tasty_bytes_db.analytics.order_fact REFRESH;
-ALTER DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics REFRESH;
-ALTER DYNAMIC TABLE tasty_bytes_db.analytics.product_performance_metrics REFRESH;
-
--- Check refresh history for order_fact
-SELECT name, refresh_action, state, refresh_start_time
-FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-  NAME => 'tasty_bytes_db.ANALYTICS.ORDER_FACT'
-))
-ORDER BY REFRESH_START_TIME DESC LIMIT 10;
-
--- Check refresh history for daily_business_metrics
-SELECT name, refresh_action, state, refresh_start_time
-FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-  NAME => 'tasty_bytes_db.ANALYTICS.DAILY_BUSINESS_METRICS'
-))
-ORDER BY REFRESH_START_TIME DESC LIMIT 10;
-
--- Check refresh history for product_performance_metrics
-SELECT name, refresh_action, state, refresh_start_time
-FROM TABLE(INFORMATION_SCHEMA.DYNAMIC_TABLE_REFRESH_HISTORY(
-  NAME => 'tasty_bytes_db.ANALYTICS.PRODUCT_PERFORMANCE_METRICS'
-))
-ORDER BY REFRESH_START_TIME DESC LIMIT 10;
-
--- Updated metrics from today
-SELECT order_date, total_orders, total_items_sold, total_revenue, total_profit
-FROM tasty_bytes_db.analytics.daily_business_metrics
-ORDER BY order_date DESC LIMIT 5;
-
--- Updated product performance
-SELECT menu_item_name, item_category, total_units_sold, total_revenue, total_profit
-FROM tasty_bytes_db.analytics.product_performance_metrics
-ORDER BY total_revenue DESC
-LIMIT 10;
