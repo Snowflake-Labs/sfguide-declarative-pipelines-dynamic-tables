@@ -6,7 +6,9 @@ Copy the prompt below into Cortex Code.
 ================================================================================
 
 Build a 3-tier dynamic table pipeline in tasty_bytes_db.analytics using
-warehouse tasty_bytes_wh. Use INITIALIZE = 'ON_REFRESH' for all tables.
+warehouse tasty_bytes_wh:
+
+Use INITIALIZE = 'ON_REFRESH' for all dynamic tables.
 
 Tier 1 - Enrichment (TARGET_LAG = DOWNSTREAM):
 - orders_enriched: From tasty_bytes_db.raw.order_header. Include order_id,
