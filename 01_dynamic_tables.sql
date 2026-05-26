@@ -51,6 +51,14 @@ Tier 3 - Aggregated Metrics (TARGET_LAG = 1 hour):
   (standard_sale_price), revenue_per_unit, profit_per_unit.
 
 ================================================================================
-Reference SQL is available in the solutions branch.
+
+After CoCo creates the 5 dynamic tables, trigger the initial load with this prompt:
+
+Refresh daily_business_metrics and product_performance_metrics in
+tasty_bytes_db.analytics. Snowflake will handle the upstream dependencies.
+
+Note: You only need to trigger the top-tier tables — Snowflake automatically
+cascades through Tier 1 and Tier 2 first due to the DOWNSTREAM dependency model.
+
 ================================================================================
 */
