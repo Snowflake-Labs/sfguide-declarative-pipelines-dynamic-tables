@@ -50,7 +50,12 @@ The SQL files remain fully runnable on their own for anyone who prefers the trad
 | `05_semantic_view_agent.sql` | Semantic view + Cortex Agent creation | Generate-then-confirm |
 | `06_cleanup.sql` | Drop all lab resources | Direct execution |
 
-## Quick Start
+## Branches
+
+| Branch | Contents | Purpose |
+|:-------|:---------|:--------|
+| `main` | Prompt-only SQL files | Create your Workspace from this branch — CoCo sees prompts, not answers |
+| `solutions` | Full SQL implementation | Reference / answer key — check here after completing each step |
 
 1. Navigate to **Projects > Workspaces** in Snowsight
 2. Click **Create > From Git repository**
