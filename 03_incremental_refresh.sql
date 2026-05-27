@@ -10,7 +10,7 @@ How many rows are currently in tasty_bytes_db.raw.order_header and
 tasty_bytes_db.raw.order_detail?
 
 PROMPT 2:
-Call tasty_bytes_db.raw.generate_demo_orders(500)
+Call tasty_bytes_db.raw.generate_demo_orders(1000)
 
 PROMPT 3:
 Refresh daily_business_metrics and product_performance_metrics in
