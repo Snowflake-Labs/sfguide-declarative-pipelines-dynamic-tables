@@ -61,7 +61,7 @@ USE WAREHOUSE tasty_bytes_wh;
 -- Tier 1: ORDERS_ENRICHED
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.orders_enriched
   TARGET_LAG = 'DOWNSTREAM'
-  INITIALIZE = 'ON_REFRESH'
+  INITIALIZE = 'ON_SCHEDULE'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -88,7 +88,7 @@ WHERE order_id IS NOT NULL
 -- Tier 1: ORDER_ITEMS_ENRICHED
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_items_enriched
   TARGET_LAG = 'DOWNSTREAM'
-  INITIALIZE = 'ON_REFRESH'
+  INITIALIZE = 'ON_SCHEDULE'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -128,7 +128,7 @@ WHERE od.order_id IS NOT NULL
 -- Tier 2: ORDER_FACT
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.order_fact
   TARGET_LAG = 'DOWNSTREAM'
-  INITIALIZE = 'ON_REFRESH'
+  INITIALIZE = 'ON_SCHEDULE'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -170,7 +170,7 @@ INNER JOIN tasty_bytes_db.analytics.order_items_enriched oi
 -- Tier 3: DAILY_BUSINESS_METRICS
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.daily_business_metrics
   TARGET_LAG = '1 hour'
-  INITIALIZE = 'ON_REFRESH'
+  INITIALIZE = 'ON_SCHEDULE'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT
@@ -195,7 +195,7 @@ GROUP BY order_date, day_name;
 -- Tier 3: PRODUCT_PERFORMANCE_METRICS
 CREATE OR REPLACE DYNAMIC TABLE tasty_bytes_db.analytics.product_performance_metrics
   TARGET_LAG = '1 hour'
-  INITIALIZE = 'ON_REFRESH'
+  INITIALIZE = 'ON_SCHEDULE'
   WAREHOUSE = tasty_bytes_wh
   AS
 SELECT

@@ -51,7 +51,7 @@ FROM tasty_bytes_db.raw.order_header;
 SELECT COUNT(*) AS total_order_details FROM tasty_bytes_db.raw.order_detail;
 
 -- PROMPT 2: Generate new orders
-CALL tasty_bytes_db.raw.generate_demo_orders(500);
+CALL tasty_bytes_db.raw.generate_demo_orders(1000);
 
 -- PROMPT 3: Verify new data
 SELECT COUNT(*) AS total_orders FROM tasty_bytes_db.raw.order_header;
